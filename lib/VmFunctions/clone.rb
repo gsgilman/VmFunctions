@@ -1,4 +1,3 @@
-require 'waitutil'
 module VmFunctions
   class Clone
     attr_accessor :vim, :dc
@@ -30,16 +29,16 @@ module VmFunctions
       baseEntity
     end
 
-    def clone_vm (vm_source, vm_name, vm_mac)
+    def clone_vm (vm_source, new_vm_name, vm_mac)
       vm = dc.find_vm(vm_source)
       relocateSpec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => find_pool(host))
       spec = RbVmomi::VIM.VirtualMachineCloneSpec(:location => relocateSpec, :powerOn => false, :template => false)
-      task = vm.CloneVM_Task(:folder => vm.parent, :name => vm_name, :spec => spec)
+      task = vm.CloneVM_Task(:folder => vm.parent, :name => new_vm_name, :spec => spec)
       print "Cloning ..."
       task.wait_for_completion
 
       if vm_mac
-        clone = vim.serviceInstance.find_datacenter.find_vm(vm_name)
+        clone = vim.serviceInstance.find_datacenter.find_vm(new_vm_name)
         card = clone.config.hardware.device.grep(RbVmomi::VIM::VirtualEthernetCard).find { |x| x.deviceInfo.label == "Network adapter 1" } or
         abort "Can't find source network card to customize"
         card.macAddress = vm_mac
